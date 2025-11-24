@@ -1,0 +1,69 @@
+esphome:
+  name: esp32-door-distance-ct-cell
+  friendly_name: ESP32 Door Distance CT Cell
+
+esp32:
+  board: wt32-eth01
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "m8ThltSaoWczCDlstiwd36GmvhMPlSp0C1m3lq4buZ4="
+
+ota:
+  - platform: esphome
+    password: "de9506589af50d0a0efd44f83e7b933d"
+
+# wifi:
+#   ssid: !secret wifi_ssid
+#   password: !secret wifi_password
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 1
+  power_pin: GPIO16
+  manual_ip: 
+    static_ip: 172.23.253.45
+    gateway: 172.23.253.33
+    subnet: 255.255.255.224
+    dns1: 141.3.142.53
+    dns2: 141.3.142.51
+
+mqtt:
+  # broker: 192.168.2.105 # Test
+  broker: 172.23.253.37
+  # port: 1883 # Test
+  port: 1884
+  username: !secret mqtt_broker_username
+  password: !secret mqtt_broker_password
+
+# Example configuration entry for ESP32
+i2c:
+  sda: GPIO15
+  scl: GPIO14
+  scan: true
+  id: bus_a
+  frequency: 10kHz
+
+# Simple configuration entry example
+sensor:
+  - platform: vl53l0x
+    name: "VL53L0x Distance"
+    id: TOF_sensor
+    address: 0x29
+    update_interval: 500ms
+    long_range: true
+    on_value:
+      - mqtt.publish:
+          topic: "esp32-door-distance-ct-cell/sensor/vl53l0x_distance/distance"
+          payload: !lambda |-
+            return to_string(id(TOF_sensor).state);
+    
